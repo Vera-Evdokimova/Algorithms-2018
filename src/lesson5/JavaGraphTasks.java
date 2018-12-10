@@ -2,34 +2,33 @@ package lesson5;
 
 import kotlin.NotImplementedError;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @SuppressWarnings("unused")
 public class JavaGraphTasks {
     /**
      * Эйлеров цикл.
      * Средняя
-     *
+     * <p>
      * Дан граф (получатель). Найти по нему любой Эйлеров цикл.
      * Если в графе нет Эйлеровых циклов, вернуть пустой список.
      * Соседние дуги в списке-результате должны быть инцидентны друг другу,
      * а первая дуга в списке инцидентна последней.
      * Длина списка, если он не пуст, должна быть равна количеству дуг в графе.
      * Веса дуг никак не учитываются.
-     *
+     * <p>
      * Пример:
-     *
-     *      G -- H
-     *      |    |
+     * <p>
+     * G -- H
+     * |    |
      * A -- B -- C -- D
      * |    |    |    |
      * E    F -- I    |
      * |              |
      * J ------------ K
-     *
+     * <p>
      * Вариант ответа: A, E, J, K, D, C, H, G, B, C, I, F, B, A
-     *
+     * <p>
      * Справка: Эйлеров цикл -- это цикл, проходящий через все рёбра
      * связного графа ровно по одному разу
      */
@@ -40,25 +39,25 @@ public class JavaGraphTasks {
     /**
      * Минимальное остовное дерево.
      * Средняя
-     *
+     * <p>
      * Дан граф (получатель). Найти по нему минимальное остовное дерево.
      * Если есть несколько минимальных остовных деревьев с одинаковым числом дуг,
      * вернуть любое из них. Веса дуг не учитывать.
-     *
+     * <p>
      * Пример:
-     *
-     *      G -- H
-     *      |    |
+     * <p>
+     * G -- H
+     * |    |
      * A -- B -- C -- D
      * |    |    |    |
      * E    F -- I    |
      * |              |
      * J ------------ K
-     *
+     * <p>
      * Ответ:
-     *
-     *      G    H
-     *      |    |
+     * <p>
+     * G    H
+     * |    |
      * A -- B -- C -- D
      * |    |    |
      * E    F    I
@@ -72,52 +71,124 @@ public class JavaGraphTasks {
     /**
      * Максимальное независимое множество вершин в графе без циклов.
      * Сложная
-     *
+     * <p>
      * Дан граф без циклов (получатель), например
-     *
-     *      G -- H -- J
-     *      |
+     * <p>
+     * G -- H -- J
+     * |
      * A -- B -- D
      * |         |
      * C -- F    I
      * |
      * E
-     *
+     * <p>
      * Найти в нём самое большое независимое множество вершин и вернуть его.
      * Никакая пара вершин в независимом множестве не должна быть связана ребром.
-     *
+     * <p>
      * Если самых больших множеств несколько, приоритет имеет то из них,
      * в котором вершины расположены раньше во множестве this.vertices (начиная с первых).
-     *
+     * <p>
      * В данном случае ответ (A, E, F, D, G, J)
-     *
+     * <p>
      * Эта задача может быть зачтена за пятый и шестой урок одновременно
      */
+
+    /**
+     * Трудоемкость: так как мы запоминаем значения на предыдущих шагах ->
+     * Трудоемкость O(v + e), где v - количество вершин, e - количесво рёбер.
+     * Ресурсоемкость: так как в storage мы хваним соответствующее каждой вершине независимое множество других вершин ->
+     * Ресурсоемкость O(v^2).
+     */
     public static Set<Graph.Vertex> largestIndependentVertexSet(Graph graph) {
-        throw new NotImplementedError();
+        Graph.Vertex root = graph.getVertices().iterator().next();
+        Map<Graph.Vertex, Set<Graph.Vertex>> storage = new HashMap<>();
+        return independentSubset(storage, root, null, graph);
+    }
+
+    private static Set<Graph.Vertex> independentSubset(Map<Graph.Vertex,
+            Set<Graph.Vertex>> storage, Graph.Vertex root, Graph.Vertex parent, Graph graph) {
+        Set<Graph.Vertex> result = storage.get(root);
+        if (result != null) return result;
+        else {
+            List<Graph.Vertex> children = new ArrayList<>();
+            for (Graph.Vertex neighbour : graph.getNeighbors(root)) {
+                if (neighbour != parent) {
+                    children.add(neighbour);
+                }
+            }
+            Set<Graph.Vertex> childrenSet = new HashSet<>();
+            for (Graph.Vertex child : children) {
+                childrenSet.addAll(independentSubset(storage, child, root, graph));
+            }
+            Set<Graph.Vertex> grandchildrenSet = new HashSet<>();
+            for (Graph.Vertex child : children) {
+                for (Graph.Vertex neighbour : graph.getNeighbors(child)) {
+                    if (neighbour != root) {
+                        grandchildrenSet.addAll(independentSubset(storage, neighbour, child, graph));
+                    }
+                }
+            }
+            if (childrenSet.size() > grandchildrenSet.size() + 1) {
+                storage.put(root, childrenSet);
+                return childrenSet;
+            } else {
+                grandchildrenSet.add(root);
+                storage.put(root, grandchildrenSet);
+                return grandchildrenSet;
+            }
+        }
     }
 
     /**
      * Наидлиннейший простой путь.
      * Сложная
-     *
+     * <p>
      * Дан граф (получатель). Найти в нём простой путь, включающий максимальное количество рёбер.
      * Простым считается путь, вершины в котором не повторяются.
      * Если таких путей несколько, вернуть любой из них.
-     *
+     * <p>
      * Пример:
-     *
-     *      G -- H
-     *      |    |
+     * <p>
+     * G -- H
+     * |    |
      * A -- B -- C -- D
      * |    |    |    |
      * E    F -- I    |
      * |              |
      * J ------------ K
-     *
+     * <p>
      * Ответ: A, E, J, K, D, C, H, G, B, F, I
      */
+
+    /**
+     * Трудоемкость: так как алгоритм перебирает все возможные простые пути ->
+     * Трудоемкость O(n!), где n - количество вершин
+     * Ресурсоемкость: так как используется стек который хранит в себе все перебираемые пути ->
+     * Ресурсоемкость O(n!)
+     */
     public static Path longestSimplePath(Graph graph) {
-        throw new NotImplementedError();
+        Deque<Path> deque = new ArrayDeque<>();
+        Path longestPath = null;
+        int length = -1;
+        for (Graph.Vertex vertex : graph.getVertices()) {
+            deque.push(new Path(vertex));
+        }
+        while (!deque.isEmpty()) {
+            Path path = deque.pop();
+            if (path.getLength() > length) {
+                longestPath = path;
+                length = path.getLength();
+                if (path.getVertices().size() == graph.getVertices().size()) {
+                    break;
+                }
+            }
+            List<Graph.Vertex> vertices = path.getVertices();
+            for (Graph.Vertex neighbour : graph.getNeighbors(vertices.get(vertices.size() - 1))) {
+                if (!path.contains(neighbour)) {
+                    deque.push((new Path(path, graph, neighbour)));
+                }
+            }
+        }
+        return longestPath;
     }
 }
