@@ -109,35 +109,30 @@ public class JavaGraphTasks {
             Set<Graph.Vertex>> storage, Graph.Vertex root, Graph.Vertex parent, Graph graph) {
         Set<Graph.Vertex> result = storage.get(root);
         if (result != null) return result;
-        else {
-            List<Graph.Vertex> children = new ArrayList<>();
-            for (Graph.Vertex neighbour : graph.getNeighbors(root)) {
-                if (neighbour != parent) {
-                    children.add(neighbour);
-                }
-            }
-            Set<Graph.Vertex> childrenSet = new HashSet<>();
-            for (Graph.Vertex child : children) {
-                childrenSet.addAll(independentSubset(storage, child, root, graph));
-            }
-            Set<Graph.Vertex> grandchildrenSet = new HashSet<>();
-            for (Graph.Vertex child : children) {
-                for (Graph.Vertex neighbour : graph.getNeighbors(child)) {
-                    if (neighbour != root) {
-                        grandchildrenSet.addAll(independentSubset(storage, neighbour, child, graph));
+
+        Set<Graph.Vertex> childrenSet = new HashSet<>();
+        Set<Graph.Vertex> grandchildrenSet = new HashSet<>();
+
+        for (Graph.Vertex neighbour : graph.getNeighbors(root)) {
+            if (neighbour != parent) {
+                childrenSet.addAll(independentSubset(storage, neighbour, root, graph));
+                for (Graph.Vertex grandneighbour : graph.getNeighbors(neighbour)) {
+                    if (grandneighbour != root) {
+                        grandchildrenSet.addAll(independentSubset(storage, grandneighbour, neighbour, graph));
                     }
                 }
             }
-            if (childrenSet.size() > grandchildrenSet.size() + 1) {
-                storage.put(root, childrenSet);
-                return childrenSet;
-            } else {
-                grandchildrenSet.add(root);
-                storage.put(root, grandchildrenSet);
-                return grandchildrenSet;
-            }
+        }
+        if (childrenSet.size() > grandchildrenSet.size() + 1) {
+            storage.put(root, childrenSet);
+            return childrenSet;
+        } else {
+            grandchildrenSet.add(root);
+            storage.put(root, grandchildrenSet);
+            return grandchildrenSet;
         }
     }
+
 
     /**
      * Наидлиннейший простой путь.
